@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - dev
+        paths:
+      - 'webserver/index.html'
 
 jobs:
   deploy:
@@ -30,5 +32,5 @@ jobs:
         ECR_REPOSITORY: dcchallenge-prob
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -f server/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -f webserver/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
