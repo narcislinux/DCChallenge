@@ -8,7 +8,7 @@ on:
       - 'webserver/index.html'
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
