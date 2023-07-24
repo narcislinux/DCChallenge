@@ -4,11 +4,15 @@ files:
   - source: ./
     destination: /opt/DCChallenge
 hooks:
+  BeforeInstall:
+    - location: scripts/pull_latest_image.sh
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop_docker_compose.sh
+      timeout: 300
+      runas: root
   ApplicationStart:
     - location: scripts/start_docker_compose.sh
       timeout: 300
       runas: root
-  # ApplicationStop:
-  #   - location: scripts/stop_server.sh
-  #     timeout: 300
-  #     runas: root
