@@ -1,18 +1,18 @@
 version: 0.0
 os: linux
 files:
-  - source: ./webserver/index.html
+  - source: webserver/index.html
     destination: /opt/DCChallenge/index.html
 hooks:
   BeforeInstall:
     - location: scripts/pull_latest_image.sh
       timeout: 300
       runas: root
-  ApplicationStop:
-    - location: scripts/stop_docker_compose.sh
-      timeout: 300
-      runas: root
-  ApplicationStart:
-    - location: scripts/start_docker_compose.sh
-      timeout: 300
-      runas: root
+  # ApplicationStop:
+  #   - location: scripts/stop_docker_compose.sh
+  #     timeout: 300
+  #     runas: root
+  # ApplicationStart:
+  #   - location: scripts/start_docker_compose.sh
+  #     timeout: 300
+  #     runas: root
