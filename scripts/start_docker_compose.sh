@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /opt/DCChallenge/webserver
-docker-compose up  --no-recreate
+cd /opt/DCChallenge/
+sudo docker-compose up -d  --no-recreate
