@@ -435,7 +435,7 @@ Resources:
               # Login to ECR using the retrieved password
               AWS_ECR_LOGIN=$(aws ecr get-login-password --region ${AWS::Region}) 
               echo $AWS_ECR_LOGIN | docker login -u AWS --password-stdin ${WebServerRepoURL}
-              docker pull ${WebServerRepoURL}:latest || echo -e "\033[31m  Requested image not found\033[0m"  
+              docker pull ${WebServerRepoURL}:latest || echo -e "\033[31m[ERROR] Requested image not found\033[0m"  
               
               # Create DCC paths and configurations
               mkdir -p /opt/DCChallenge 
