@@ -1,0 +1,6 @@
+- name: Create project folder
+  file:
+    path: /opt/dcchalenge
+    state: directory
+    owner: ec2-user
+    group: ec2-user

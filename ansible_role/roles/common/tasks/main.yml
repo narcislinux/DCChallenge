@@ -1,0 +1,14 @@
+---
+
+- include: cron_job.yml
+  tags:
+    - cron
+
+- include: project_path.yml
+  tags:
+    - cron
+
+- include: requirement.yml
+  tags:
+    - requirement
+
