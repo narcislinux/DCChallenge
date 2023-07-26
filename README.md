@@ -109,9 +109,23 @@ To alter the displayed context, you can update the webserver/index.html file.
 ### 5. Project Cleanup
 To delete the stack, the contents of the S3 bucket related to the project must be cleared beforehand. In addition, the service roles created by the stack and the repository contents should be deleted.
 
-``` bastion
+``` bash
 aws cloudformation delete-stack --stack-name <stack name> --profile <> --region <>
-
-`1`
+```
 
 Note: Before deleting the stack, make sure you have backed up all the essential project data that you may need to refer to in the future.
+
+### 6. Troubleshooting
+
+- Error 502: If you see a 502 Bad Gateway error on your browser, this indicates that your web server(EC2 instances) have been launched, but the container hasn't started correctly, and the service isn't operational. To resolve this issue, verify that the deployment has been correctly executed and that docker-compose is running ('up').
+
+- If you see a 504 Gateway Time-out error on your browser, it means that there are no instances present behind your load balancer. In this scenario, ensure that the auto-scaling is functioning correctly.
+
+- You can find the userdata script(bootstapt)'s logs at the following path: "/var/log/init.log".
+
+- If, during the EC2 startup, you observe the following message in the "/var/log/init.log", it signifies that this is the first time the project's stack is being executed and there are no images present in the repository(ECR) or the repository images be removed. To resolve this problem, you need to deploy the project once:
+
+```bash
+[2023-07-26 16:51:38] Error response from daemon: manifest for 142170537646.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod:latest not found: manifest unknown: Requested image not found
+[2023-07-26 16:51:38]   [ERROR]Requested image not found
+```
