@@ -86,7 +86,7 @@ Parameters:
   GitHubBranch:
     Description: Branch name in the GitHub repository to monitor for changes
     Type: String
-    Default: main
+    Default: main 
   GitHubConnectionArn:
     Type: String
     Description: CodeStar Connection ARN.
