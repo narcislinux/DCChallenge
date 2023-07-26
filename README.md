@@ -13,7 +13,7 @@ You can see the project diagram above. Monitoring and ‌‌Bastion are consider
 3. **Project Setup**
 4. **Project Deployment**
 5. **Delete Project**
-6. **Debugging**
+6. **Troubleshooting**
 
 ### 1. Project Structure
 The project follows this directory structure:
