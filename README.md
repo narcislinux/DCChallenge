@@ -122,7 +122,7 @@ Note: Before deleting the stack, make sure you have backed up all the essential 
 
 - **Userdata Log:** You can find the userdata script(bootstapt)'s logs at the following path: "/var/log/init.log".
 
-- **Image not found:** If, during the EC2 startup, you observe the following message in the "/var/log/init.log", it signifies that this is the first time the project's stack is being executed and there are no images present in the repository(ECR) or the repository images be removed. To resolve this problem, you need to deploy the project once:
+- **Image not found:** If, during the EC2 startup, you observe the following message in the **/var/log/init.log**, it signifies that this is the first time the project's stack is being executed and there are no images present in the repository(ECR) or the repository images be removed. To resolve this problem, you need to deploy the project once:
 
 ```bash
 [2023-07-26 16:51:38] Error response from daemon: manifest for *********.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod:latest not found: manifest unknown: Requested image not found
