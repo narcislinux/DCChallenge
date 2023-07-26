@@ -700,6 +700,12 @@ Resources:
                 Action:
                   - 'codecommit:GitPull'
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'logs:PutLogEvents'
+                  - 'logs:CreateLogStream'
+                  - 'logs:CreateLogGroup'
+                Resource: '*'
       ManagedPolicyArns:
       - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
       - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
