@@ -3,7 +3,7 @@
 ![DCC Diagram](images/DCChallenge-diagram.png)
 
 
-This project is about setting up a highly available web server on EC2 using Docker containers, ECR, Infrastructure as Code (IaC), automation, and pipelines. I call the project DCChallenge or **DCC**, which stands for "Devops Code Challenge".
+This project is about setting up a highly available web server on EC2 using Docker containers, ECR, Infrastructure as Code (IaC), automation, and pipelines. I call the project **DCChallenge** or **DCC**, which stands for "Devops Code Challenge".
 
 You can see the project diagram above. Monitoring and ‌‌Bastion are considered in the project but have not been implemented yet.
 
