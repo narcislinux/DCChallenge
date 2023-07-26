@@ -1,5 +1,39 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Cloudformation for provisioning HighAvailable web servers required to setup the CI/CD .'
+Description: 'DCC project- Cloudformation for provisioning HighAvailable web servers and CI/CD.'
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Environment"
+        Parameters:
+          - Environment
+      - Label:
+          default: "Repositories"
+        Parameters:
+          - Environment
+      - Label:
+          default: "Network"
+        Parameters:
+          - VpcIpRange
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+
+      - Label:
+          default: "WebServer"
+        Parameters:
+          - WebserverInstanceType
+          - WebserverMaxSize
+          - WebserverMinSize
+          - WebserverType
+      - Label:
+          default: "Repository"
+        Parameters:
+          - GitHubRepoURL
+          - GitHubBranch
+          - GitHubConnectionArn
+          - WebServerRepoURL
 
 Parameters:
   Environment:
@@ -63,10 +97,6 @@ Parameters:
     Type: String 
     Description: ECR repository URL for the Webserver project
     Default: '142170537646.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod'
-  ThumbprintList:
-    Type: String 
-    Default: 6938fd4d98bab03faadb97b34396831e3780aea1
-    Description: A thumbprint of an Open ID Connector is a SHA1 hash of the public certificate of the host
 
 Mappings:
   AmiMap: 
@@ -405,7 +435,7 @@ Resources:
               # Login to ECR using the retrieved password
               AWS_ECR_LOGIN=$(aws ecr get-login-password --region ${AWS::Region}) 
               echo $AWS_ECR_LOGIN | docker login -u AWS --password-stdin ${WebServerRepoURL}
-              docker pull ${WebServerRepoURL}:latest || echo -e "\033[31m  Requested image not found\033[0m"  
+              docker pull ${WebServerRepoURL}:latest || echo -e "\033[31m[ERROR] Requested image not found\033[0m"  
               
               # Create DCC paths and configurations
               mkdir -p /opt/DCChallenge 
