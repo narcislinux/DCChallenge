@@ -19,7 +19,6 @@ Metadata:
           - PublicSubnet2CIDR
           - PrivateSubnet1CIDR
           - PrivateSubnet2CIDR
-
       - Label:
           default: "WebServer"
         Parameters:
@@ -34,7 +33,6 @@ Metadata:
           - GitHubBranch
           - GitHubConnectionArn
           - WebServerRepoURL
-
 Parameters:
   Environment:
     Description: Please enter the environment you want to use, for example, production, test, or development
@@ -88,7 +86,7 @@ Parameters:
   GitHubBranch:
     Description: Branch name in the GitHub repository to monitor for changes
     Type: String
-    Default: dev
+    Default: main
   GitHubConnectionArn:
     Type: String
     Description: CodeStar Connection ARN.
@@ -221,7 +219,6 @@ Resources:
     DependsOn:
       - Vpc
       - InternetGateway
-
   InternetGatewayRoute:
     Type: AWS::EC2::Route
     Properties:
