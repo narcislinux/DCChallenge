@@ -12,7 +12,7 @@ You can see the project diagram above. Monitoring and ‌‌Bastion are consider
 2. **Configuring AWS CLI**
 3. **Project Setup**
 4. **Project Deployment**
-5. **Project Cleanup**
+5. **Delete Project**
 6. **Debugging**
 
 ### 1. Project Structure
@@ -105,7 +105,7 @@ The project branch is customizable, and you can modify it in the CloudFormation 
 
 To Change the displayed context, you can update the **"webserver/index.html"** file.
 
-### 5. Project Cleanup
+### 5. Delete Project 
 To delete the stack, the S3 bucket related to the project must be cleared beforehand. In addition, the service roles created by the stack and the repository should be deleted too.
 
 ``` bash
