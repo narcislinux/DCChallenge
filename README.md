@@ -8,7 +8,6 @@ This project is about setting up a highly available web server on EC2 using Dock
 You can see the project diagram above. Monitoring and ‌‌Bastion are considered in the project but have not been implemented yet.
 
 ## Contents
-**
 1. **Project Structure**
 2. **Configuring AWS CLI**
 3. **Project Setup**
