@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: webserver/index.html
-    destination: /opt/DCChallenge/index.html
+    destination: /opt/DCChallenge/
 hooks:
   BeforeInstall:
     - location: scripts/pull_latest_image.sh
