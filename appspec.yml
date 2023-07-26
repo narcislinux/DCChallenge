@@ -3,16 +3,16 @@ os: linux
 files:
   - source: webserver/index.html
     destination: /opt/DCChallenge/index.html
-# hooks:
-#   BeforeInstall:
-#     - location: scripts/pull_latest_image.sh
-#       timeout: 300
-#       runas: ec2-user
-#   ApplicationStop: 
-#     - location: scripts/stop_docker_compose.sh
-#       timeout: 300
-#       runas: ec2-user
-#   ApplicationStart:
-#     - location: scripts/start_docker_compose.sh
-#       timeout: 300
-#       runas: ec2-user
+hooks:
+  BeforeInstall:
+    - location: scripts/pull_latest_image.sh
+      timeout: 300
+      runas: ec2-user
+  ApplicationStop: 
+    - location: scripts/stop_docker_compose.sh
+      timeout: 300
+      runas: ec2-user
+  ApplicationStart:
+    - location: scripts/start_docker_compose.sh
+      timeout: 300
+      runas: ec2-user
