@@ -91,7 +91,7 @@ Resources:
         - Key: Environment 
           Value: !Ref Environment 
 
-  # Subnets - pubils
+  # Subnets - public
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -253,7 +253,6 @@ Resources:
       SubnetId: !Ref PrivateSubnet2  
 
   # Nat Gateways
-
   NatGateway1:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -294,14 +293,12 @@ Resources:
           Value: !Ref 'AWS::StackName'
         - Key: Environment 
           Value: !Ref Environment   
-
   NatGateway1Route:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref PrivateRouteTable1
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NatGateway1
-
   NatGateway2Route:
     Type: AWS::EC2::Route
     Properties:
@@ -314,7 +311,6 @@ Resources:
     Type: 'AWS::EC2::KeyPair'
     Properties: 
       KeyName: !Ref 'AWS::StackName'
-
   DcchallengeBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -326,7 +322,6 @@ Resources:
               SSEAlgorithm: AES256   
       VersioningConfiguration:
         Status: Enabled
-
   WebServerLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -369,12 +364,10 @@ Resources:
                 Value: !Ref Environment                   
         UserData:
           'Fn::Base64': !Sub |
-              #!/bin/bash -x
-              
+              #!/bin/bash 
               set -e
               exec 1>> >(gawk '{ print strftime("[%Y-%m-%d %H:%M:%S]"), $0 }' > "/var/log/init.log") 2>&1
               
-
               until ping -c1 www.google.com &>/dev/null; do
                   echo -e "\033[32mWaiting for network ...\033[0m" 
                   sleep 1
@@ -427,7 +420,6 @@ Resources:
                     - ./logs/nginx/:/var/log/nginx " > /opt/DCChallenge/docker-compose.yml
               
               # Run Service
-
               docker-compose up -d --force-recreate && echo -e "\033[32mDCC service is up!\033[0m" 
 
               # Make project variable files
@@ -449,7 +441,6 @@ Resources:
     Properties:
       Path: /
       Roles: [ !Ref WebServerRole ]
-
   WebServerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -493,7 +484,6 @@ Resources:
                 - "ecr:ListTagsForResource"
                 - "ecr:DescribeImageScanFindings"
                 Resource: '*'
-
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -552,7 +542,6 @@ Resources:
         - Key: Name 
           PropagateAtLaunch: false
           Value: dcchallenge-webserver
-
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     DependsOn: InternetGatewayAttachment
@@ -568,7 +557,6 @@ Resources:
           Value: !Ref 'AWS::StackName'
         - Key: Environment 
           Value: !Ref Environment 
-
   LoadBalancerHttpsListener:
     Type : AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -578,7 +566,6 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
       Protocol: HTTP
-
   LoadBalancerHttpTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -617,7 +604,6 @@ Resources:
           Value: !Ref 'AWS::StackName'
         - Key: Environment 
           Value: !Ref Environment 
-
 # CI/CD
 # CI/CD Repository
   EcrRepository:
@@ -655,7 +641,6 @@ Resources:
           Value: !Ref 'AWS::StackName'
         - Key: Environment 
           Value: !Ref Environment 
-
   # CI/CD CodeBuild
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
@@ -689,7 +674,6 @@ Resources:
       - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
       - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
       - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole'
-
   CodeBuildProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
@@ -754,7 +738,6 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
 
   # CI/CD Deploy
-
   CodeDeployServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -788,12 +771,10 @@ Resources:
                 - 's3:GetBucketVersioning'
                 - 's3:PutObject'
             Resource: '*'
-
   CodeDeployProject:
     Type: AWS::CodeDeploy::Application
     Properties:
       ApplicationName: !Ref 'AWS::StackName'
-
   CodeDeployDeploymentGroup:
     Type: AWS::CodeDeploy::DeploymentGroup
     Properties:
@@ -811,7 +792,6 @@ Resources:
           Value: !Ref 'AWS::StackName'
         - Key: Environment 
           Value: !Ref Environment   
-
   # CI/CD Pipeline
   PipeLineServiceRole:
     Type: AWS::IAM::Role
@@ -835,7 +815,6 @@ Resources:
               - Action: '*'
                 Effect: Allow
                 Resource: '*'
-
   PipelineProject:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -896,11 +875,9 @@ Resources:
 Outputs:
   StacksName:
     Value: !Ref 'AWS::StackName'
-  BucketName:
-    Value: !Ref DcchallengeBucket
-  # StacksRegion:
-  #   Value: !Ref 'AWS::Region'
-    # KeyPairFingerprint:
-    # Value: !GetAtt NewKeyPair.KeyFingerprint
   LoadBalancerDNSName:
     Value: !GetAtt LoadBalancer.DNSName
+  BucketName:
+    Value: !Ref DcchallengeBucket
+  WebServerKeyPairFingerprint:
+    Value: !GetAtt NewKeyPair.KeyFingerprint
