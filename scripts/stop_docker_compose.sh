@@ -1,3 +1,3 @@
 #!/bin/bash
-cd /opt/DCChallenge/webserver
-docker-compose down
+cd /opt/DCChallenge/
+sudo docker-compose down
