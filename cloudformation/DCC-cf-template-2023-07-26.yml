@@ -1,0 +1,906 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Cloudformation for provisioning HighAvailable web servers required to setup the CI/CD .'
+
+Parameters:
+  Environment:
+    Description: Please enter the environment you want to use, for example, production, test, or development
+    Type: String
+    Default: production
+  VpcIpRange:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.10.0/24
+  PublicSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.192.11.0/24
+  PrivateSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String 
+    Default: 10.192.20.0/24
+  PrivateSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+    Type: String
+    Default: 10.192.21.0/24
+  WebserverInstanceType:
+    Type: String
+    Default: t3.nano
+    AllowedValues:
+      - none
+      - t3.nano
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+  WebserverMaxSize:
+    Description: Set to 0 to not setup any webservers
+    Type: Number
+    Default: 2
+  WebserverMinSize:
+    Type: Number
+    Default: 2
+  WebserverType:
+    Type: String
+    Default: php
+    AllowedValues: [ php, python, node ]
+  GitHubRepoURL:
+    Type: String 
+    Description: GitHub repository URL for the project code (e.g., https://github.com/yourusername/your-repo.git)
+    Default: 'https://github.com/narcislinux/DCChallenge.git'
+  GitHubBranch:
+    Description: Branch name in the GitHub repository to monitor for changes
+    Type: String
+    Default: dev
+  GitHubConnectionArn:
+    Type: String
+    Description: CodeStar Connection ARN.
+    Default: 'arn:aws:codestar-connections:eu-central-1:142170537646:connection/452a9f52-41cd-44b3-b9d8-5af9221318f9'
+  WebServerRepoURL:
+    Type: String 
+    Description: ECR repository URL for the Webserver project
+    Default: '142170537646.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod'
+  ThumbprintList:
+    Type: String 
+    Default: 6938fd4d98bab03faadb97b34396831e3780aea1
+    Description: A thumbprint of an Open ID Connector is a SHA1 hash of the public certificate of the host
+
+Mappings:
+  AmiMap: 
+    eu-central-1: 
+      t3: ami-09b9b03c0397e6a62 # replace with actual AMI ID for t3 in eu-central-1
+   #  t3: ami-0dc7fe3dd38437495 # Amazon Linux 2023
+    eu-north-1: 
+      t3: ami-0716e5989a4e4fa52 # replace with actual AMI ID for t3 in eu-north-1
+
+Resources:    
+  # Vpc 
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcIpRange
+      InstanceTenancy: default
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment 
+
+  # Subnets - pubils
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref PublicSubnet1CIDR
+      AvailabilityZone: !Select [ 0, !GetAZs  '' ]
+      VpcId: !Ref Vpc
+      MapPublicIpOnLaunch: True
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
+        - Key: Environment 
+          Value: !Ref Environment 
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref PublicSubnet2CIDR
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      VpcId: !Ref Vpc
+      MapPublicIpOnLaunch: True
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
+        - Key: Environment 
+          Value: !Ref Environment 
+  # Subnets - private
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      AvailabilityZone: !Select [ 0, !GetAZs  '' ]
+      VpcId: !Ref Vpc
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private'
+        - Key: Environment 
+          Value: !Ref Environment 
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      VpcId: !Ref Vpc
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private'
+        - Key: Environment 
+          Value: !Ref Environment 
+
+  # NetworkAcl
+  NetworkAcl:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment 
+  NetworkAclEntryEgress:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Egress: true
+      Protocol: -1
+      RuleAction: allow
+      RuleNumber: 100
+      NetworkAclId: !Ref NetworkAcl
+  NetworkAclEntryIgress:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Protocol: -1
+      RuleAction: allow
+      RuleNumber: 100
+      NetworkAclId: !Ref NetworkAcl
+  SubnetAclAssociation1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref NetworkAcl
+      SubnetId: !Ref PublicSubnet1
+  SubnetAclAssociation2:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref NetworkAcl
+      SubnetId: !Ref PublicSubnet2
+
+  # Internet Gateways
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+    DependsOn:
+      - Vpc
+      - InternetGateway
+
+  InternetGatewayRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PublicRouteTable
+      GatewayId: !Ref InternetGateway
+    DependsOn: InternetGatewayAttachment
+
+  # Route tables 
+  # Public Route table
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment      
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+   
+  # Private Route table
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment       
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment  
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1     
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2  
+
+  # Nat Gateways
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1ElasticIp.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment       
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2ElasticIp.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment       
+  NatGateway1ElasticIp:
+    Type: AWS::EC2::EIP
+    DependsOn: Vpc
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment   
+  NatGateway2ElasticIp:
+    Type: AWS::EC2::EIP
+    DependsOn: Vpc
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment   
+
+  NatGateway1Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  NatGateway2Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  # Web-server
+  NewKeyPair:
+    Type: 'AWS::EC2::KeyPair'
+    Properties: 
+      KeyName: !Ref 'AWS::StackName'
+
+  DcchallengeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-${AWS::Region}-${AWS::AccountId}'
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256   
+      VersioningConfiguration:
+        Status: Enabled
+
+  WebServerLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-webserver'
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: 8
+              VolumeType: gp3
+              Encrypted: true
+        IamInstanceProfile:
+         Arn: !GetAtt WebServerRoleInstanceProfile.Arn
+        ImageId: !FindInMap 
+          - AmiMap
+          - !Ref 'AWS::Region'
+          - t3
+        InstanceInitiatedShutdownBehavior: terminate
+        InstanceType: !Ref WebserverInstanceType
+        KeyName: !Ref 'AWS::StackName'
+        SecurityGroupIds: [ !Ref WebServerSecurityGroup ]
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Ref 'AWS::StackName'
+              - Key: Environment 
+                Value: !Ref Environment   
+          - ResourceType: volume
+            Tags:
+              - Key: Name
+                Value: !Ref 'AWS::StackName'
+              - Key: Environment 
+                Value: !Ref Environment   
+          - ResourceType: network-interface
+            Tags:
+              - Key: Name
+                Value: !Ref 'AWS::StackName'
+              - Key: Environment 
+                Value: !Ref Environment                   
+        UserData:
+          'Fn::Base64': !Sub |
+              #!/bin/bash -x
+              
+              set -e
+              exec 1>> >(gawk '{ print strftime("[%Y-%m-%d %H:%M:%S]"), $0 }' > "/var/log/init.log") 2>&1
+              
+
+              until ping -c1 www.google.com &>/dev/null; do
+                  echo -e "\033[32mWaiting for network ...\033[0m" 
+                  sleep 1
+              done
+
+              echo -e "\033[32mlaunch script..\033[0m" 
+
+              # Requirement
+              echo -e "\033[32m  Install the required packages\033[0m" 
+              yum update -y 
+              yum -y install docker python3-pip jq
+              service docker start
+              sudo usermod -a -G docker ec2-user
+              sudo chmod 666 /var/run/docker.sock
+              docker version && echo -e "\033[32m  Docker Installation completed\033[0m"  
+              
+              # Install Docker-compose
+              sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) \
+              -o /usr/bin/docker-compose
+              sudo chmod 755 /usr/bin/docker-compose  
+              docker-compose --version && echo -e "\033[32m  Docker-compose Installation completed\033[0m" 
+              # Install CodeData Agent
+              cd /tmp/
+              yum install -y ruby wget
+              wget https://aws-codedeploy-${AWS::Region}.s3.${AWS::Region}.amazonaws.com/latest/codedeploy-agent.noarch.rpm
+              rpm -ivh /tmp/codedeploy-agent.noarch.rpm  && echo -e "\033[32m  CodeDeploy-agent Installation completed\033[0m"
+
+              # DCC service
+              echo -e "\033[32mSet up the DCC service\033[0m" 
+              
+              TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+              INSTANCE_ID=$( curl -Ss -H "X-aws-ec2-metadata-token: $TOKEN" -v 169.254.169.254/latest/dynamic/instance-identity/document | jq -r .instanceId )
+              hostname $INSTANCE_ID
+
+              # Login to ECR using the retrieved password
+              AWS_ECR_LOGIN=$(aws ecr get-login-password --region ${AWS::Region}) 
+              echo $AWS_ECR_LOGIN | docker login -u AWS --password-stdin ${WebServerRepoURL}
+              docker pull ${WebServerRepoURL}:latest || echo -e "\033[31m  Requested image not found\033[0m"  
+              
+              # Create DCC paths and configurations
+              mkdir -p /opt/DCChallenge 
+              cd /opt/DCChallenge
+              echo "version: '3.8'
+              services: 
+                dcc:
+                  image: ${WebServerRepoURL}:latest
+                  ports:
+                    - "80:80"
+                  volumes:
+                    - ./logs/nginx/:/var/log/nginx " > /opt/DCChallenge/docker-compose.yml
+              
+              # Run Service
+
+              docker-compose up -d --force-recreate && echo -e "\033[32mDCC service is up!\033[0m" 
+
+              # Make project variable files
+              echo "
+              DCC_REPOSITORY_URI=${WebServerRepoURL}
+              DCC_DEFAULT_REGION=${AWS::Region}
+              DCC_S3_BUCKET=${DcchallengeBucket}
+              DCC_INSTANCE_ID=$INSTANCE_ID
+              " > /opt/DCChallenge/.env && echo -e "\033[32m DCC variables file created (/opt/DCChallenge/.env).\033[0m"
+
+              # Monitoring
+              echo "# Update with 'Cloudformation
+              */5 * * * *  /bin/bash -c  'ss  -nltp | grep "0.0.0.0:80" >/dev/null && echo $? (systemctl is-active --quiet docker || systemctl restart docker) '" > /etc/cron.d/DCChallenge
+
+              uptime
+
+  WebServerRoleInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ !Ref WebServerRole ]
+
+  WebServerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-WebserverRole'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub ec2.${AWS::URLSuffix}
+            Action: [ sts:AssumeRole ]
+      Path: /
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+      Policies:
+        - PolicyName: "allow-webserver-deployment-bucket-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - 's3:Get*'
+                  - 's3:List*'
+                Resource: !Sub arn:${AWS::Partition}:s3:::${DcchallengeBucket}/*
+        - PolicyName: "allow-webserver-ecr-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:  
+                - "ecr:GetAuthorizationToken"
+                - "ecr:BatchCheckLayerAvailability"
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:GetRepositoryPolicy"
+                - "ecr:DescribeRepositories"
+                - "ecr:ListImages"
+                - "ecr:DescribeImages"
+                - "ecr:BatchGetImage"
+                - "ecr:GetLifecyclePolicy"
+                - "ecr:GetLifecyclePolicyPreview"
+                - "ecr:ListTagsForResource"
+                - "ecr:DescribeImageScanFindings"
+                Resource: '*'
+
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${AWS::StackName}-webserver'
+      GroupDescription: WebServerSecurityGroup
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 16.192.0.156/32
+          Description: Bastion
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 16.19.0.157/32
+          Description: Monitoring
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          Description: Load Balancer
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          Description: Load Balancer
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment   
+
+# Loadbalancer
+  WebserverAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Cooldown: 300
+      DesiredCapacity: !Ref WebserverMinSize
+      MaxSize: !Ref WebserverMaxSize
+      MinSize: !Ref WebserverMinSize
+      HealthCheckGracePeriod: 400
+      HealthCheckType: ELB
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WebServerLaunchTemplate
+        Version: !GetAtt WebServerLaunchTemplate.LatestVersionNumber
+      TargetGroupARNs:
+        - !Ref LoadBalancerHttpTargetGroup
+      Tags:
+        - Key: Name 
+          PropagateAtLaunch: false
+          Value: dcchallenge-webserver
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Scheme: internet-facing
+      Name: !Ref 'AWS::StackName'
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups: [ !Ref LoadBalancerSecurityGroup ]
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment 
+
+  LoadBalancerHttpsListener:
+    Type : AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+          - Type: forward
+            TargetGroupArn: !Ref LoadBalancerHttpTargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  LoadBalancerHttpTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      UnhealthyThresholdCount: 2
+      HealthCheckPath: "/"
+      Name: !Sub '${AWS::StackName}-HTTP'
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment 
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${AWS::StackName}-loadbalancer'
+      GroupDescription: LoadBalancerSecurityGroup
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment 
+
+# CI/CD
+# CI/CD Repository
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref 'AWS::StackName'
+      RepositoryPolicyText:
+        Version: '2008-10-17'
+        Statement:
+          - Sid: AllowPushPull
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action:
+              - 'ecr:GetDownloadUrlForLayer'
+              - 'ecr:BatchGetImage'
+              - 'ecr:BatchCheckLayerAvailability'
+              - 'ecr:PutImage'
+              - 'ecr:InitiateLayerUpload'
+              - 'ecr:UploadLayerPart'
+              - 'ecr:CompleteLayerUpload'
+          - Sid: AllowDescribe
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action:
+              - 'ecr:DescribeRepositories'
+              - 'ecr:GetRepositoryPolicy'
+              - 'ecr:ListImages'
+              - 'ecr:DescribeImages'
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment 
+
+  # CI/CD CodeBuild
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}CodeBuildRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codebuild.amazonaws.com
+          Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 'CodeBuildPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'                
+                  - 's3:GetObject'
+                  - 's3:GetObjectVersion'
+                  - 's3:PutObject'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'codecommit:GitPull'
+                Resource: '*'
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
+      - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
+      - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole'
+
+  CodeBuildProject:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+        Name: BuildArtifact
+      Environment:
+        ComputeType: 'BUILD_GENERAL1_SMALL'
+        Image: 'aws/codebuild/standard:5.0'
+        Type: 'LINUX_CONTAINER'
+        EnvironmentVariables:
+        - Name:  REPOSITORY_URI
+          Value: !Ref WebServerRepoURL
+        PrivilegedMode: true
+      Source:
+        Type: CODEPIPELINE
+        # Type: 'GITHUB'
+        # Location: !Ref GitHubRepoURL
+        # GitCloneDepth: 1
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - echo Logging in to Amazon ECR...
+                - aws --version
+                # Get the ECR login password 
+                - AWS_ECR_LOGIN=$(aws ecr get-login-password --region $AWS_DEFAULT_REGION) 
+                # Login to ECR using the retrieved password
+                - echo $AWS_ECR_LOGIN | docker login -u AWS --password-stdin $REPOSITORY_URI
+                - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+                - IMAGE_TAG=${COMMIT_HASH:=latest}
+            build:
+              commands:
+                - ls
+                - echo Build started on `date`
+                - echo Building the Docker image...
+                - cd webserver
+                - echo 'dckr_pat_nYX7B8gRmhTxISC70zVjVSqHYIc' | docker login -u narcislinux  --password-stdin 
+                - docker build  -t $REPOSITORY_URI:latest .
+                - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+            post_build:
+              commands:
+                - echo Build completed on `date`
+                - echo Pushing the Docker image...
+                - docker push $REPOSITORY_URI:latest
+                - docker push $REPOSITORY_URI:$IMAGE_TAG
+          artifacts:
+            files:
+              - '**/*'
+            name: BuildArtifact
+      SourceVersion: !Sub '^refs/heads/${GitHubBranch}'
+      # Triggers:
+      #   Webhook: true
+      #   FilterGroups:
+      #     - - Type: EVENT
+      #         Pattern: PUSH
+      #       - Type: HEAD_REF
+      #         Pattern: !Sub '^refs/heads/${GitHubBranch}'
+      #       - Type: FILE_PATH
+      #         Pattern: webserver/index.html
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+
+  # CI/CD Deploy
+
+  CodeDeployServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-CodeDeployRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: ['codedeploy.amazonaws.com']
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: CodeDeployServiceRolePolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - 'autoscaling:*'
+            - 'ec2:*'
+            - 'tag:GetTags'
+            - 'tag:GetResources'
+            - 'ecr:*'
+            - 'iam:PassRole'
+            Effect: Allow
+            Resource: '*'
+          - Effect: Allow
+            Action:
+                - 's3:GetObject'
+                - 's3:GetObjectVersion'
+                - 's3:GetBucketVersioning'
+                - 's3:PutObject'
+            Resource: '*'
+
+  CodeDeployProject:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: !Ref 'AWS::StackName'
+
+  CodeDeployDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployProject
+      DeploymentGroupName: MyDeploymentGroup
+      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
+      AutoScalingGroups:
+        - !Ref WebserverAutoScalingGroup
+      DeploymentStyle:
+        DeploymentType: IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+        - Key: Environment 
+          Value: !Ref Environment   
+
+  # CI/CD Pipeline
+  PipeLineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-CodePipelineRole'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: CodePipelinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action: '*'
+                Effect: Allow
+                Resource: '*'
+
+  PipelineProject:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${AWS::StackName}-Pipeline' 
+      RoleArn: !GetAtt PipeLineServiceRole.Arn
+      ArtifactStore:
+        Location: !Ref DcchallengeBucket 
+        Type: S3
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: 1
+              RunOrder: 1
+              Configuration:
+                ConnectionArn: !Ref GitHubConnectionArn
+                FullRepositoryId: 'narcislinux/DCChallenge'
+                BranchName: !Ref GitHubBranch
+                OutputArtifactFormat: CODE_ZIP
+              OutputArtifacts:
+                - Name: SourceArtifact
+        - Name: Build
+          Actions:
+            - Name: Build
+              InputArtifacts:
+                - Name: SourceArtifact
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              RunOrder: 2                
+              OutputArtifacts:
+                - Name: BuildArtifact
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              InputArtifacts:
+                - Name: BuildArtifact
+              ActionTypeId: 
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: 1
+              RunOrder: 3        
+              # OutputArtifacts:
+              #   - Name: DeployArtifact
+              Configuration: 
+                ApplicationName: !Ref CodeDeployProject
+                DeploymentGroupName: !Ref CodeDeployDeploymentGroup
+
+Outputs:
+  StacksName:
+    Value: !Ref 'AWS::StackName'
+  BucketName:
+    Value: !Ref DcchallengeBucket
+  # StacksRegion:
+  #   Value: !Ref 'AWS::Region'
+    # KeyPairFingerprint:
+    # Value: !GetAtt NewKeyPair.KeyFingerprint
+  LoadBalancerDNSName:
+    Value: !GetAtt LoadBalancer.DNSName

@@ -1,0 +1,6 @@
+
+- name: Create project-awslogs-sync cron
+  lineinfile:
+    path: /etc/cron.d/project-awslogs-sync
+    create: yes
+    line: "*/10 * * * * root /??????c"
