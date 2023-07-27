@@ -90,11 +90,11 @@ Parameters:
   GitHubConnectionArn:
     Type: String
     Description: CodeStar Connection ARN.
-    Default: 'arn:aws:codestar-connections:eu-central-1:142170537646:connection/452a9f52-41cd-44b3-b9d8-5af9221318f9'
+    Default: ''
   WebServerRepoURL:
     Type: String 
     Description: ECR repository URL for the Webserver project
-    Default: '142170537646.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod'
+    Default: '************.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod'
 
 Mappings:
   AmiMap: 
