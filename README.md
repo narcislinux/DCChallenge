@@ -61,7 +61,15 @@ Default output format [None]: json
 
 To set up the project for the **first time**, you will need to run the following commands:
 
-1. Navigate to the main project folder and execute the following command:
+1. Navigate to the main project folder. You need to assign values to the parameters defined inside file **DCC-cf-template-<date>.yml** ".
+
+You have two options for doing this, 
+
+  - define separate file for Parameter( use **--template-body file://template.yaml** option in awscli).
+    
+  - update default values in the main template alternatively.
+   
+2. execute the following command:
 
 ``` bash 
 aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name <stack name> --template-body file://cloudformation/DCC-cf-template-2023-07-26.yaml  --profile <project profile name > --region <project region>
@@ -69,14 +77,14 @@ aws cloudformation create-stack --capabilities CAPABILITY_NAMED_IAM --stack-name
 
 > Note: This project template is currently set up for regions **eu-central-1** and **eu-north-1**.
 
-2. After running the command, you can monitor the status of the stack until the entire project is up. You can do this either through the AWS console or by executing the following command:
+3. After running the command, you can monitor the status of the stack until the entire project is up. You can do this either through the AWS console or by executing the following command:
 
 ``` bash 
 aws cloudformation describe-stack-events --stack-name <stack name> --profile <project profile name >  --region <project region>
 
 ```
 
-3. After the stack is fully up and running, to **update** it ,you should use the following command:
+4. After the stack is fully up and running, to **update** it ,you should use the following command:
 
 ```bash 
 aws cloudformation update-stack --capabilities CAPABILITY_NAMED_IAM --stack-name <stack name> --template-body file://cloudformation/DCC-cf-template-2023-07-26.yaml  --profile <project profile name> --region <project region>
