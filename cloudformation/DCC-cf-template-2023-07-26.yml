@@ -28,6 +28,7 @@ Metadata:
           - GitHubBranch
           - GitHubConnectionArn
           - WebServerRepoURL
+
 Parameters:
   Environment:
     Description: Please enter the environment you want to use, for example, production, test, or development
@@ -76,7 +77,7 @@ Parameters:
   GitHubBranch:
     Description: Branch name in the GitHub repository to monitor for changes
     Type: String
-    Default: main 
+    Default: main
   GitHubConnectionArn:
     Type: String
     Description: CodeStar Connection ARN.
