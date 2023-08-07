@@ -65,7 +65,7 @@ To set up the project for the **first time**, you will need to run the following
 
 You have two options for doing this, 
 
-  - define separate file for Parameter (pass it to the command with **--parameters file://parameters.json** option in awscli).
+  - define separate file for Parameter (pass it to the command with **--parameters file://cloudformation/parameters.json** option in awscli).
     
   - update default values in the main template alternatively.
    

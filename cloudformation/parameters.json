@@ -1,55 +1,55 @@
 [
   {
     "ParameterKey": "Environment",
-    "ParameterValue": ""
+    "ParameterValue": "prod"
   },
   {
     "ParameterKey": "VpcIpRange",
-    "ParameterValue": ""
+    "ParameterValue": "10.192.0.0/16"
   },
   {
     "ParameterKey": "PublicSubnet1CIDR",
-    "ParameterValue": ""
+    "ParameterValue": "10.192.10.0/24"
   },
   {
     "ParameterKey": "PublicSubnet2CIDR",
-    "ParameterValue": ""
+    "ParameterValue": "10.192.11.0/24"
   },
   {
     "ParameterKey": "PrivateSubnet1CIDR",
-    "ParameterValue": ""
+    "ParameterValue": "10.192.20.0/24"
   },
   {
     "ParameterKey": "PrivateSubnet2CIDR",
-    "ParameterValue": ""
+    "ParameterValue": "10.192.21.0/24"
   },
   {
     "ParameterKey": "WebserverInstanceType",
-    "ParameterValue": ""
+    "ParameterValue": "t2.micro"
   },
   {
     "ParameterKey": "WebserverMaxSize",
-    "ParameterValue": ""
+    "ParameterValue": "2"
   },
   {
     "ParameterKey": "WebserverMinSize",
-    "ParameterValue": ""
+    "ParameterValue": "2"
   },
   {
     "ParameterKey": "GitHubRepoURL",
-    "ParameterValue": ""
+    "ParameterValue": "https://github.com/narcislinux/DCChallenge.git"
   },
   {
     "ParameterKey": "GitHubBranch",
-    "ParameterValue": ""
+    "ParameterValue": "main"
   },
   {
     "ParameterKey": "GitHubConnectionArn",
-    "ParameterValue": ""
+    "ParameterValue": "arn:aws:codestar-connections:eu-central-1:142170537646:connection/452a9f52-41cd-44b3-b9d8-5af9221318f9"
   },
   {
     "ParameterKey": "WebServerRepoURL",
-    "ParameterValue": ""
+    "ParameterValue": "142170537646.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod"
   }
 ]
 
