@@ -1,0 +1,18 @@
+# Based on DCC-cf-template-2023-07-26.yml template
+Environment
+  Environment
+Network:
+  VpcIpRange: 10.192.0.0/16
+  PublicSubnet1CIDR: 10.192.10.0/24
+  PublicSubnet2CIDR: 10.192.11.0/24
+  PrivateSubnet1CIDR: 10.192.20.0/24
+  PrivateSubnet2CIDR: 10.192.21.0/24
+WebServer:
+  WebserverInstanceType: t2.micro
+  WebserverMaxSize:2
+  WebserverMinSize:2
+Repository:
+  GitHubRepoURL: 'https://github.com/narcislinux/DCChallenge.git'
+  GitHubBranch: main
+  GitHubConnectionArn: ''
+  WebServerRepoURL: '************.dkr.ecr.eu-central-1.amazonaws.com/dcchallenge-prod'

@@ -8,10 +8,6 @@ Metadata:
         Parameters:
           - Environment
       - Label:
-          default: "Repositories"
-        Parameters:
-          - Environment
-      - Label:
           default: "Network"
         Parameters:
           - VpcIpRange
@@ -25,7 +21,6 @@ Metadata:
           - WebserverInstanceType
           - WebserverMaxSize
           - WebserverMinSize
-          - WebserverType
       - Label:
           default: "Repository"
         Parameters:
@@ -60,14 +55,13 @@ Parameters:
     Default: 10.192.21.0/24
   WebserverInstanceType:
     Type: String
-    Default: t3.nano
+    Default: t2.micro
     AllowedValues:
       - none
+      - t2.nano
+      - t2.micro
       - t3.nano
       - t3.micro
-      - t3.small
-      - t3.medium
-      - t3.large
   WebserverMaxSize:
     Description: Set to 0 to not setup any webservers
     Type: Number
@@ -75,10 +69,6 @@ Parameters:
   WebserverMinSize:
     Type: Number
     Default: 2
-  WebserverType:
-    Type: String
-    Default: php
-    AllowedValues: [ php, python, node ]
   GitHubRepoURL:
     Type: String 
     Description: GitHub repository URL for the project code (e.g., https://github.com/yourusername/your-repo.git)
@@ -99,10 +89,10 @@ Parameters:
 Mappings:
   AmiMap: 
     eu-central-1: 
-      t3: ami-09b9b03c0397e6a62 # replace with actual AMI ID for t3 in eu-central-1
-   #  t3: ami-0dc7fe3dd38437495 # Amazon Linux 2023
+      t2: ami-0b5c00c0109ecef42 # replace with actual AMI ID for t2 in eu-central-1
+   #  t2: ami-0dc7fe3dd38437495 # Amazon Linux 2023
     eu-north-1: 
-      t3: ami-0716e5989a4e4fa52 # replace with actual AMI ID for t3 in eu-north-1
+      t3: ami-0e70ee23034b6470c # replace with actual AMI ID for t3 in eu-north-1
 
 Resources:    
   # Vpc 
@@ -365,7 +355,7 @@ Resources:
         ImageId: !FindInMap 
           - AmiMap
           - !Ref 'AWS::Region'
-          - t3
+          - t2
         InstanceInitiatedShutdownBehavior: terminate
         InstanceType: !Ref WebserverInstanceType
         KeyName: !Ref 'AWS::StackName'
