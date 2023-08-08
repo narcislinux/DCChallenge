@@ -1,0 +1,55 @@
+[
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "VpcIpRange",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "PublicSubnet1CIDR",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "PublicSubnet2CIDR",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "PrivateSubnet1CIDR",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "PrivateSubnet2CIDR",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "WebserverInstanceType",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "WebserverMaxSize",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "WebserverMinSize",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "GitHubRepoURL",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "GitHubBranch",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "GitHubConnectionArn",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "WebServerRepoURL",
+    "ParameterValue": ""
+  }
+]
+
