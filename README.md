@@ -8,14 +8,14 @@ This project is about setting up a highly available web server on EC2 using Dock
 You can see the project diagram above. Monitoring and ‌‌Bastion are considered in the project but have not been implemented yet.
 
 ## Contents
-1. **Project Structure**
-2. **Configuring AWS CLI**
-3. **Project Setup**
-4. **Project Deployment**
-5. **Delete Project**
-6. **Troubleshooting**
+1. [Project Structure](#ProjectStructure)
+2. [Configuring AWS CLI](#onfiguringAWSCLI) 
+3. [Project Setup](#ProjectSetup)
+4. [Project Deployment](#ProjectDeployment)
+5. [Delete Project](#DeleteProject)
+6. [Troubleshooting](#Troubleshooting)
 
-### 1. Project Structure
+### 1. Project Structure  <a name="ProjectStructure"></a>
 The project follows this directory structure:
 
 ``` bash
@@ -37,7 +37,7 @@ The project follows this directory structure:
 - **scripts** folder and **appspec.yml**: Used by AWS CodeDeploy service. Modify these files if you need to change the deployment process.
 - **webserver** folder: Contains the project's main **Dockerfile** and **index.html**(webserver context).
 
-### 2. Configuring AWS CLI
+### 2. Configuring AWS CLI  <a name="ConfiguringAWSCLI"></a>
 For this project, you can use either the AWS CloudFormation console or the AWS CLI. This guide uses the AWS CLI, which you must have installed on your system. After installation, configure it with your AWS credentials.
 
 If you work with multiple AWS accounts, leverage AWS profiles - a set of settings including credentials and other AWS related info. Create a new profile with the command aws configure --profile profilename, where profilename is your profile name.
@@ -57,7 +57,7 @@ Default output format [None]: json
 
 ```
 
-### 3. Project Setup
+### 3. Project Setup <a name="ProjectSetup"></a>
 
 To set up the project for the **first time**, you will need to run the following commands:
 
@@ -105,7 +105,7 @@ aws cloudformation update-stack --capabilities CAPABILITY_NAMED_IAM --stack-name
 
 7. Artifacts and temporary files of the project are stored on an project **S3 bucket**.
 
-### 4. Project Deployment
+### 4. Project Deployment <a name="ProjectDeployment"></a>
 
 To deploy the project, you can commit to the **main branch** of the project repository. The repository will be updated automatically, and the containers on the servers will also be updated.
 
@@ -113,7 +113,7 @@ The project branch is customizable, and you can modify it in the CloudFormation 
 
 To Change the displayed context, you can update the **"webserver/index.html"** file.
 
-### 5. Delete Project 
+### 5. Delete Project <a name="DeleteProject"></a>
 To delete the stack, the S3 bucket related to the project must be cleared beforehand. In addition, the service roles created by the stack and the repository should be deleted too.
 
 ``` bash
@@ -122,7 +122,7 @@ aws cloudformation delete-stack --stack-name <stack name> --profile <project pro
 
 Note: Before deleting the stack, make sure you have backed up all the essential project data that you may need to refer to in the future.
 
-### 6. Troubleshooting
+### 6. Troubleshooting <a name="Troubleshooting"></a>
 
 - **Error 502:** If you see a 502 Bad Gateway error on your browser, this indicates that your web server(EC2 instances) have been launched, but the container hasn't started correctly, and the service isn't operational. To resolve this issue, verify that the deployment has been correctly executed and that docker-compose is running ('up').
 
