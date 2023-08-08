@@ -9,7 +9,7 @@ You can see the project diagram above. Monitoring and ‌‌Bastion are consider
 
 ## Contents
 1. [Project Structure](#ProjectStructure)
-2. [Configuring AWS CLI](#onfiguringAWSCLI) 
+2. [Configuring AWS CLI](#ConfiguringAWSCLI) 
 3. [Project Setup](#ProjectSetup)
 4. [Project Deployment](#ProjectDeployment)
 5. [Delete Project](#DeleteProject)
